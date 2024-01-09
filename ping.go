@@ -519,7 +519,7 @@ func (p *Pinger) runLoop(
 		logger = NoopLogger{}
 	}
 
-	timeout := time.NewTicker(p.Timeout)
+	timeout := time.NewTicker(p.Timeout + p.Interval)
 	interval := time.NewTicker(p.Interval)
 	defer func() {
 		interval.Stop()
@@ -536,10 +536,16 @@ func (p *Pinger) runLoop(
 			return nil
 
 		case <-timeout.C:
-			return nil
+			err := &net.OpError{
+				Op:   "read",
+				Net:  p.protocol,
+				Err:  errors.New("i/o timeout"),
+				Addr: p.IPAddr(),
+			}
+			return err
 
 		case r := <-recvCh:
-			err := p.processPacket(r)
+			err := p.processPacket(r, timeout)
 			if err != nil {
 				// FIXME: this logs as FATAL but continues
 				logger.Fatalf("processing received packet: %s", err)
@@ -700,7 +706,7 @@ func (p *Pinger) getCurrentTrackerUUID() uuid.UUID {
 	return p.trackerUUIDs[len(p.trackerUUIDs)-1]
 }
 
-func (p *Pinger) processPacket(recv *packet) error {
+func (p *Pinger) processPacket(recv *packet, ticker *time.Ticker) error {
 	receivedAt := time.Now()
 	var proto int
 	if p.ipv4 {
@@ -763,6 +769,10 @@ func (p *Pinger) processPacket(recv *packet) error {
 	default:
 		// Very bad, not sure how this can happen
 		return fmt.Errorf("invalid ICMP echo reply; type: '%T', '%v'", pkt, pkt)
+	}
+
+	if ticker != nil {
+		ticker.Reset(p.Timeout + p.Interval)
 	}
 
 	if p.OnRecv != nil {

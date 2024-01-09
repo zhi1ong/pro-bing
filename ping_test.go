@@ -55,7 +55,7 @@ func TestProcessPacket(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 	AssertTrue(t, shouldBe1 == 1)
 }
@@ -97,7 +97,7 @@ func TestProcessPacket_IgnoreNonEchoReplies(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 	AssertTrue(t, shouldBe0 == 0)
 }
@@ -140,7 +140,7 @@ func TestProcessPacket_IDMismatch(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 	AssertTrue(t, shouldBe0 == 0)
 }
@@ -182,7 +182,7 @@ func TestProcessPacket_TrackerMismatch(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 	AssertTrue(t, shouldBe0 == 0)
 }
@@ -220,7 +220,7 @@ func TestProcessPacket_LargePacket(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 }
 
@@ -248,7 +248,7 @@ func TestProcessPacket_PacketTooSmall(t *testing.T) {
 		ttl:    24,
 	}
 
-	err := pinger.processPacket(&pkt)
+	err := pinger.processPacket(&pkt, nil)
 	AssertError(t, err, "")
 }
 
@@ -590,7 +590,7 @@ func BenchmarkProcessPacket(b *testing.B) {
 	}
 
 	for k := 0; k < b.N; k++ {
-		pinger.processPacket(&pkt)
+		pinger.processPacket(&pkt, nil)
 	}
 }
 
@@ -641,10 +641,10 @@ func TestProcessPacket_IgnoresDuplicateSequence(t *testing.T) {
 		ttl:    24,
 	}
 
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 	// receive a duplicate
-	err = pinger.processPacket(&pkt)
+	err = pinger.processPacket(&pkt, nil)
 	AssertNoError(t, err)
 
 	AssertTrue(t, shouldBe0 == 1)
